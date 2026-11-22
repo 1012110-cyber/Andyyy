@@ -1,0 +1,569 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cutiee Andyy</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #02030a;
+    overflow: hidden;
+    font-family: "Courier New", monospace;
+}
+
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+
+.name {
+    position: absolute;
+    top: 5%;
+    width: 100%;
+    text-align: center;
+    color: #d9f4ff;
+    font-size: 25px;
+    letter-spacing: 5px;
+    text-shadow: 0 0 12px #49baff;
+    animation: appear 2s ease forwards;
+    opacity: 0;
+}
+
+.caption {
+    position: absolute;
+    bottom: 4%;
+    width: 100%;
+    text-align: center;
+    color: #b9eaff;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px #58baff;
+    opacity: 0;
+    animation: appear 2s 5s forwards;
+}
+
+@keyframes appear {
+    to { opacity: 1; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="name">Cutiee Andyy</div>
+<canvas id="bouquet"></canvas>
+<div class="caption">A little bouquet to make your day brighter, with admiration in every petal. — FROM YOUR ADMIRER KEN♡</div>
+
+<script>
+const canvas = document.getElementById("bouquet");
+const ctx = canvas.getContext("2d");
+
+let width, height, particles = [], hearts = [];
+let startTime = 0;
+
+const colors = {
+    white: ["#ffffff", "#d9f4ff", "#b9eaff", "#edfaff"],
+    blue: ["#168cff", "#36baff", "#55d5ff", "#176bdb"],
+    yellow: ["#fff1a8", "#ffdc66", "#ffe99a"],
+    green: ["#69df9b", "#a2efae", "#35bd79"],
+    pink: ["#ffb9e6", "#e994d0", "#f8d8ef"],
+    brown: ["#c58a63", "#e2b48d", "#f0c9a6"]
+};
+
+const random = (min, max) =>
+    Math.random() * (max - min) + min;
+
+const choose = array =>
+    array[Math.floor(Math.random() * array.length)];
+
+function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    buildBouquet();
+}
+
+function addParticle(x, y, color, character, size) {
+    particles.push({
+        x: width / 2 + random(-15, 15),
+        y: height * 0.52 + random(-15, 15),
+        targetX: x,
+        targetY: y,
+        color,
+        character,
+        size,
+        delay: random(0, 1.7),
+        angle: random(0, Math.PI * 2)
+    });
+}
+
+function buildBouquet() {
+    particles = [];
+
+    const centerX = width / 2;
+    const scale = Math.min(width / 390, height / 720);
+    const cell = Math.max(5, 7 * scale);
+
+    const top = height * 0.16;
+    const bouquetWidth = Math.min(width * 0.88, 350 * scale);
+    const bouquetHeight = 350 * scale;
+
+    // Flower cluster positions
+    const flowers = [
+        {x:-.34, y:.17, rx:.15, ry:.09, color:"blue"},
+        {x:-.12, y:.08, rx:.14, ry:.09, color:"white"},
+        {x:.13, y:.10, rx:.15, ry:.09, color:"yellow"},
+        {x:.35, y:.18, rx:.15, ry:.09, color:"blue"},
+        {x:-.25, y:.34, rx:.17, ry:.10, color:"white"},
+        {x:.04, y:.28, rx:.17, ry:.11, color:"blue"},
+        {x:.29, y:.36, rx:.17, ry:.10, color:"white"},
+        {x:-.04, y:.47, rx:.16, ry:.08, color:"yellow"}
+    ];
+
+    // Create flower and petal symbols
+    for (let y = 0; y < 60; y++) {
+        for (let x = -48; x <= 48; x++) {
+            const nx = x / 48;
+            const ny = y / 60;
+
+            let insideFlower = false;
+            let flowerColor = "white";
+
+            for (const flower of flowers) {
+                const dx = (nx - flower.x) / flower.rx;
+                const dy = (ny - flower.y) / flower.ry;
+
+                if (dx * dx + dy * dy < 1) {
+                    insideFlower = true;
+                    flowerColor = flower.color;
+                    break;
+                }
+            }
+
+            // Leaves and bouquet shape
+            const leafCenter = .49;
+            const leafWidth = .48 - Math.max(0, ny - .42) * .75;
+            const insideLeaves =
+                ny > .39 &&
+                ny < .69 &&
+                Math.abs(nx) < leafWidth &&
+                (Math.sin(x * .35 + y * .2) > -.9);
+
+            if (!insideFlower && !insideLeaves) continue;
+            if (Math.random() < .12) continue;
+
+            let color;
+
+            if (insideFlower) {
+                color = choose(colors[flowerColor]);
+            } else {
+                color = choose(colors.green);
+            }
+
+            const glyph = choose([
+                "=", "-", "~", "*", "+", "x",
+                ".", ":", "/", "\\", "#"
+            ]);
+
+            addParticle(
+                centerX + x * cell,
+                top + y * cell * .55,
+                color,
+                glyph,
+                random(8, 11) * scale
+            );
+        }
+    }
+
+    // Small bright flower centers
+    flowers.forEach(flower => {
+        const fx = centerX + flower.x * bouquetWidth;
+        const fy = top + flower.y * bouquetHeight;
+
+        for (let i = 0; i < 15; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const radius = random(2, 14) * scale;
+
+            addParticle(
+                fx + Math.cos(angle) * radius,
+                fy + Math.sin(angle) * radius,
+                choose(colors.yellow),
+                choose(["@", "o", "*", "+"]),
+                10 * scale
+            );
+        }
+    });
+	
+	// RIBBON ROPE WRAPPED AROUND THE BOUQUET
+const ropeY = top + bouquetHeight * 0.53;
+const ropeWidth = bouquetWidth * 0.43;
+
+// Main curved ribbon band
+for (let i = -50; i <= 50; i++) {
+    const t = i / 50;
+    const x = centerX + t * ropeWidth;
+
+    // Curved ribbon shape
+    const curve = Math.sin(t * Math.PI) * 9 * scale;
+
+    addParticle(
+        x,
+        ropeY + curve,
+        choose(["#ffb9e6", "#f58bcf", "#ffe0f2"]),
+        choose(["=", "~", "-", "≈"]),
+        13 * scale
+    );
+
+    // Lower edge of the ribbon
+    addParticle(
+        x,
+        ropeY + curve + 7 * scale,
+        choose(["#ffb9e6", "#f58bcf", "#ffe0f2"]),
+        choose(["-", "~", "="]),
+        11 * scale
+    );
+}
+
+// Ribbon knot in the middle
+addParticle(centerX, ropeY + 3 * scale, "#fff1a8", "@", 17 * scale);
+
+// Two ribbon tails
+for (let i = 0; i < 15; i++) {
+    addParticle(
+        centerX - 5 * scale - i * scale,
+        ropeY + 12 * scale + i * 2 * scale,
+        choose(colors.pink),
+        choose(["\\", "/", "~"]),
+        12 * scale
+    );
+
+    addParticle(
+        centerX + 5 * scale + i * scale,
+        ropeY + 12 * scale + i * 2 * scale,
+        choose(colors.pink),
+        choose(["/", "\\", "~"]),
+        12 * scale
+    );
+}
+	
+	// BIG RIBBON IN THE MIDDLE OF THE FLOWERS
+const ribbonX = centerX;
+const ribbonY = top + bouquetHeight * 0.40;
+const ribbonSize = 25 * scale;
+
+// Left ribbon loop
+for (let i = 0; i <= 40; i++) {
+    const angle = (i / 40) * Math.PI * 2;
+
+    addParticle(
+        ribbonX - ribbonSize * 0.65 + Math.cos(angle) * ribbonSize * 0.65,
+        ribbonY + Math.sin(angle) * ribbonSize * 0.38,
+        choose(colors.pink),
+        choose(["*", "~", "/", "\\", "<", ">"]),
+        13 * scale
+    );
+}
+
+// Right ribbon loop
+for (let i = 0; i <= 40; i++) {
+    const angle = (i / 40) * Math.PI * 2;
+
+    addParticle(
+        ribbonX + ribbonSize * 0.65 + Math.cos(angle) * ribbonSize * 0.65,
+        ribbonY + Math.sin(angle) * ribbonSize * 0.38,
+        choose(colors.pink),
+        choose(["*", "~", "/", "\\", "<", ">"]),
+        13 * scale
+    );
+}
+
+// Ribbon center knot
+addParticle(ribbonX, ribbonY, "#fff1a8", "@", 18 * scale);
+
+// Hanging ribbon tails
+for (let i = 0; i < 12; i++) {
+    addParticle(
+        ribbonX - 9 * scale - i * 1.2 * scale,
+        ribbonY + 12 * scale + i * 2.5 * scale,
+        choose(colors.pink),
+        choose(["\\", "/", "~"]),
+        13 * scale
+    );
+
+    addParticle(
+        ribbonX + 9 * scale + i * 1.2 * scale,
+        ribbonY + 12 * scale + i * 2.5 * scale,
+        choose(colors.pink),
+        choose(["/", "\\", "~"]),
+        13 * scale
+    );
+}
+
+    // Long green stems
+    for (let i = -15; i <= 15; i++) {
+        const x = centerX + i * cell * .8;
+
+        for (let j = 0; j < 19; j++) {
+            const y = top + bouquetHeight * .60 + j * cell * .55;
+            const stemX = x * (1 - j / 24) + centerX * (j / 24);
+
+            addParticle(
+                stemX,
+                y,
+                choose(colors.green),
+                choose(["|", "/", "\\", "v"]),
+                10 * scale
+            );
+        }
+    }
+
+    // Decorative bouquet wrapping
+    const wrapTop = top + bouquetHeight * .77;
+
+    for (let row = 0; row < 15; row++) {
+        const progress = row / 15;
+        const spread = bouquetWidth * (.43 - progress * .20);
+
+        for (let col = -20; col <= 20; col++) {
+            if (Math.random() < .20) continue;
+
+            addParticle(
+                centerX + (col / 20) * spread,
+                wrapTop + row * cell * .8,
+                choose(colors.pink),
+                choose(["/", "\\", "_", "~", "-"]),
+                10 * scale
+            );
+        }
+    }
+
+    // Ribbon bow
+    const bowY = wrapTop + 13 * cell * .8;
+    const bowWidth = 30 * scale;
+
+    for (let i = 0; i < 30; i++) {
+        const angle = (i / 30) * Math.PI * 2;
+
+        addParticle(
+            centerX - bowWidth * .5 + Math.cos(angle) * bowWidth * .45,
+            bowY + Math.sin(angle) * 8 * scale,
+            choose(colors.white),
+            choose(["<", ">", "/", "\\", "~"]),
+            11 * scale
+        );
+
+        addParticle(
+            centerX + bowWidth * .5 - Math.cos(angle) * bowWidth * .45,
+            bowY + Math.sin(angle) * 8 * scale,
+            choose(colors.white),
+            choose(["<", ">", "/", "\\", "~"]),
+            11 * scale
+        );
+    }
+
+    addParticle(
+        centerX, bowY, "#fff1a8", "@", 13 * scale
+    );
+
+    // TINY CUTE LABUBU ♡
+const labubu = [
+"       /\\_/\\",
+"      /     \\",
+"     |  o.o  |",
+"     |   ᴗ   |",
+"      \\_____/",
+"       /|_|\\",
+"      / | | \\",
+"        | |",
+"       /   \\",
+"      /_/ \\_\\"
+];
+
+const labubuY = bowY + 42 * scale;
+const fontSize = Math.max(8, 9 * scale);
+
+labubu.forEach((line, row) => {
+    [...line].forEach((character, col) => {
+        if (character === " ") return;
+
+        let color = "#f4d5ff";
+
+        if (character === "o") color = "#ffffff";
+        if (character === "ᴗ") color = "#ffb9e6";
+
+        addParticle(
+            centerX + (col - 5) * fontSize * .58,
+            labubuY + row * fontSize * 1.05,
+            color,
+            character,
+            fontSize
+        );
+    });
+});
+
+    startTime = performance.now();
+}
+
+// Floating hearts and sparkles
+function createHeart() {
+    if (hearts.length > 70) return;
+
+    hearts.push({
+        x: random(10, width - 10),
+        y: random(10, height - 10),
+        speed: random(0.2, 0.8),
+        drift: random(-0.35, 0.35),
+        size: random(8, 18),
+        alpha: random(0.35, 0.9),
+        character: choose([
+            "♡", "♥", "<3", "*", "+", "·",
+            "✧", "°", "o", "x", "~"
+        ]),
+        color: choose([
+            "#ffb9e6",
+            "#b9eaff",
+            "#ffffff",
+            "#d9c5ff",
+            "#ffe99a"
+        ])
+    });
+}
+
+function animate(time) {
+    ctx.clearRect(0, 0, width, height);
+
+    const elapsed = (time - startTime) / 1000;
+
+    // Assemble bouquet from the center
+    particles.forEach(p => {
+        const progress = Math.max(
+            0,
+            Math.min(1, (elapsed - p.delay) / 2.8)
+        );
+
+        const ease = 1 - Math.pow(1 - progress, 3);
+
+        p.x += (p.targetX - p.x) * (.025 + ease * .12);
+        p.y += (p.targetY - p.y) * (.025 + ease * .12);
+
+        const movement = progress > .95
+            ? Math.sin(time / 700 + p.angle) * .5
+            : 0;
+
+        ctx.globalAlpha = Math.min(1, progress * 1.5);
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 7;
+        ctx.font = `bold ${p.size}px monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.fillText(
+            p.character,
+            p.x,
+            p.y + movement
+        );
+    });
+
+    // Floating decorative symbols
+	
+	// FLOATING, DRIFTING AND ROTATING EFFECTS
+if (Math.random() < 0.35) createHeart();
+
+hearts.forEach((heart) => {
+    heart.x += heart.vx;
+    heart.y += heart.vy;
+
+    // Randomly change direction	
+    heart.vx += random(-0.025, 0.025);
+    heart.vy += random(-0.025, 0.025);
+
+    heart.vx = Math.max(-1.5, Math.min(1.5, heart.vx));
+    heart.vy = Math.max(-1.5, Math.min(1.5, heart.vy));
+
+    // Rotate
+    heart.rotation += heart.spin;
+
+    // Screen boundaries
+    if (heart.x < -25) heart.x = width + 20;
+    if (heart.x > width + 25) heart.x = -20;
+    if (heart.y < -25) heart.y = height + 20;
+    if (heart.y > height + 25) heart.y = -20;
+
+    ctx.save();
+    ctx.translate(heart.x, heart.y);
+    ctx.rotate(heart.rotation);
+
+    ctx.globalAlpha = heart.alpha;
+    ctx.fillStyle = heart.color;
+    ctx.shadowColor = heart.color;
+    ctx.shadowBlur = 10;
+    ctx.font = `${heart.size}px monospace`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.fillText(heart.character, 0, 0);
+    ctx.restore();
+});
+
+ctx.globalAlpha = 1;
+ctx.shadowBlur = 0;
+    // FLOATING EFFECTS WITH RANDOM DIRECTIONS
+function createHeart() {
+    if (hearts.length > 120) return;
+
+    hearts.push({
+        x: random(10, width - 10),
+        y: random(10, height - 10),
+
+        // Random movement in every direction
+        vx: random(-1.2, 1.2),
+        vy: random(-1.2, 1.2),
+
+        size: random(8, 18),
+        alpha: random(0.35, 0.9),
+
+        // Random spinning
+        rotation: random(0, Math.PI * 2),
+        spin: random(-0.04, 0.04),
+
+			character: choose([
+    "♡", "♥", "ღ", "୨୧", "<3",
+    "*", "✦", "✧", "✩", "★", "☆",
+    "❀", "✿", "❁", "ꕤ", "❋",
+    "⋆", "｡", "°", "·", "•", "○",
+    "◇", "◆", "✶", "✷", "✸",
+     "+", "x", "~", "o", "✺", "❃",
+    "༄", "༊", "ꔫ", "𖹭"
+]),
+
+        color: choose([
+            "#ffb9e6",
+            "#b9eaff",
+            "#ffffff",
+            "#d9c5ff",
+            "#ffe99a"
+        ])
+    });
+}
+
+    requestAnimationFrame(animate);
+}
+
+window.addEventListener("resize", resize);
+
+resize();
+requestAnimationFrame(animate);
+</script>
+
+</body>
+</html>
+
